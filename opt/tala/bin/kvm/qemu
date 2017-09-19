@@ -1,0 +1,41 @@
+#!/bin/bash
+
+VM=$1
+ACT=$2
+
+XMLCMD="/usr/bin/xmlstarlet"
+BRCTL="/sbin/brctl"
+IFCONFIG="/sbin/ifconfig"
+XMLFILE="/etc/libvirt/qemu/${VM}.xml"
+
+VM_NUM=$($XMLCMD sel -t -m "/domain/description" -v "concat(.,'')" "$XMLFILE") 
+NIC0="vn${VM_NUM}-0" 
+DEFAULT_BR0=$($XMLCMD sel -t -m "//interface[target/@dev='$NIC0']/source" -v @bridge "$XMLFILE")
+IF_LIST=($(ifconfig -a | grep Ethernet| grep -v vn | grep -v br | awk '{print $1}' ))
+
+if [ "$ACT" = "prepare" ] ; then
+
+        if $IFCONFIG "$DEFAULT_BR0" > /dev/null 2>&1 ; then
+                echo "bridge $DEFAULT_BR0 found"
+        else
+                echo "create bridge $DEFAULT_BR0"
+                $BRCTL addbr "$DEFAULT_BR0"
+	        $BRCTL addif $DEFAULT_BR0 ${IF_LIST[0]}
+                $IFCONFIG "$DEFAULT_BR0" up
+        fi
+
+fi
+
+
+
+if [ "$ACT" = "release" ] ; then
+
+        if $BRCTL showstp "$DEFAULT_BR0" | egrep "\-0 |\-1 |\-2 " ; then
+                echo "not found remove local network vlan "
+        else
+                echo "remove bridge & vlan $VLANNUM"
+                $IFCONFIG "$CURRENT_BR0" down
+                $BRCTL delif "$CURRENT_BR0" ${IF_LIST[0]}
+                $BRCTL delbr "$CURRENT_BR0"
+        fi
+fi
