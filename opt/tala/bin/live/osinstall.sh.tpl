@@ -141,6 +141,8 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
 
+	xfs_repair /dev/sda
+
 elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 
 	gdisk /dev/sda <<-EOF
@@ -199,6 +201,8 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
+
+	xfs_repair /dev/sda
 
 fi
 

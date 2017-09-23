@@ -45,22 +45,16 @@ fi
 
 # 対象ホストの情報取得
 readonly CURL="/usr/bin/curl -s"
-readonly JQ="/usr/bin/jq"
-readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1/ "
-#readonly IPMI_IP="$($CURL $URL_BASE/nodes/$HOST_ID | jq .)"
-#readonly IPMI_NAME="$($CURL $URL_BASE/nodes/$HOST_ID | jq .)"
-#readonly IPMI_PASS="$($CURL $URL_BASE/nodes/$HOST_ID | jq .)"
-readonly IPMI_IP="192.168.125.3"
-readonly IPMI_NAME="admin"
-readonly IPMI_PASS="admin"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
+readonly IPMI_IP="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_ip_address)"
+readonly IPMI_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_user_name)"
+readonly IPMI_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_password)"
 
 # すでに情報がある場合には削除する
 [ -d "${TALADIR}/nodes/${HOST_ID}" ] && rm -rf ${TALADIR}/nodes/${HOST_ID} 
 [ -d "${TALADIR}/nodes/${IPMI_IP}" ] && rm -rf ${TALADIR}/nodes/${IPMI_IP} 
 
-# TFTPをgetinfoに切り替える
-[ -L /tftpboot ] && unlink /tftpboot
-ln -s /tftpboot_getinfo /tftpboot || exit 1
 systemctl reload-or-restart tftpd-hpa.service
 
 
@@ -84,5 +78,6 @@ while true ;do
     sleep 10
 done
 
+shutdown -h now
 
 exit 0 

@@ -1,0 +1,10 @@
+DEFAULT pxeboot
+TIMEOUT 20
+PROMPT 0
+console 0
+serial 0 115200 0
+
+LABEL pxeboot
+	KERNEL vmlinuz0
+	APPEND rootflags=loop initrd=initrd_deploy.img root=live:/cent69-x86_64-getinfo.iso rootfstype=auto ro liveimg quiet  rhgb rd_NO_LUKS rd_NO_MD rd_NO_DM  biosdevname=0 console=tty0 console=ttyS0,115200n8
+ONERROR LOCALBOOT 0
