@@ -50,7 +50,6 @@ if [ "$OS_IMG" = "CentOS7_master.img.gz" ] ;then
 
 	gdisk /dev/sda <<-EOF
 	p
-	p
 	x
 	e
 	m
@@ -82,7 +81,6 @@ if [ "$OS_IMG" = "CentOS7_master.img.gz" ] ;then
 elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 
 	gdisk /dev/sda <<-EOF
-	p
 	p
 	x
 	e
@@ -141,12 +139,11 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
 
-	xfs_repair /dev/sda
+	#xfs_repair /dev/sda
 
 elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 
 	gdisk /dev/sda <<-EOF
-	p
 	p
 	x
 	e
@@ -202,7 +199,7 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
 
-	xfs_repair /dev/sda
+	#xfs_repair /dev/sda
 
 fi
 
@@ -213,4 +210,5 @@ date
 
 scp ${LOGDIR}/${CMDNAME}_${DATE}.log ${TALA_SERVER}:/opt/tala/log/${BM_NAME}.log
 
+sleep 30
 reboot
