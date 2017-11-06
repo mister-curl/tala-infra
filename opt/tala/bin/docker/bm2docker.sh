@@ -85,6 +85,9 @@ sed -i 's/^XKBMODEL=.*$/XKBMODEL="jp106"/' /etc/default/keyboard
 sed -i 's/^XKBLAYOUT=.*$/XKBLAYOUT="jp"/' /etc/default/keyboard
 
 
+# option
+echo 'DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4"' >> /etc/default/docker
+
 systemctl start docker
 systemctl enable docker
 
@@ -92,10 +95,21 @@ systemctl enable docker
 $DOCKER pull ubuntu:14.04
 $DOCKER pull ubuntu:16.04
 $DOCKER pull centos:6
+$DOCKER pull centos:7
 
 
+## docker image build
+cd /opt/tala/bin/dokerfile/ubuntu1404
+$DOCKER build --no-cache -t tala/ubuntu:14.04 .
+
+cd /opt/tala/bin/dokerfile/ubuntu1604
+$DOCKER build --no-cache -t tala/ubuntu:16.04 .
+
+
+
+
+# inteface
 mv -f /etc/network/interfaces{,.orig}
-
 
 while : ;do
         LIST=($(ifconfig -a | grep Ethernet | awk '{print $1}' ))
@@ -122,14 +136,8 @@ EOF
 
 echo "bridge_ports ${LIST[0]}" >> /etc/network/interfaces
 
-service docker stop
-ip link set dev docker0 down
-brctl delbr docker0
 
-# option
-echo 'DOCKER_OPTS="-b=br0"' >> /etc/default/docker
-
-
+# iptables
 cat << 'EOF' > /etc/iptables/iptables.rules
 *filter
 :INPUT ACCEPT [0:0]
@@ -144,6 +152,8 @@ cat << 'EOF' > /etc/iptables/iptables.rules
 -A FORWARD -j REJECT --reject-with icmp-host-prohibited
 COMMIT
 EOF
+
+
 
 cat <<EOF
 ######################################################################

@@ -77,9 +77,10 @@ done
 
 
 su - admin -c  "scp -oStrictHostKeyChecking=no ${TALADIR}/bin/docker/bm2docker.sh admin@$BM_IP:$TALADIR/bin/bm2docker.sh "
-su - admin -c  "scp ${TALADIR}/bin/kvm/concreate.sh admin@$BM_IP:$TALADIR/bin/concreate.sh"
-su - admin -c  "scp ${TALADIR}/bin/kvm/conremove.sh admin@$BM_IP:$TALADIR/bin/conremove.sh "
-su - admin -c  "scp ${TALADIR}/bin/kvm/conpower.sh admin@$BM_IP:$TALADIR/bin/conpower.sh "
+su - admin -c  "scp ${TALADIR}/bin/docker/concreate.sh admin@$BM_IP:$TALADIR/bin/concreate.sh"
+su - admin -c  "scp ${TALADIR}/bin/docker/conremove.sh admin@$BM_IP:$TALADIR/bin/conremove.sh "
+su - admin -c  "scp ${TALADIR}/bin/docker/conpower.sh admin@$BM_IP:$TALADIR/bin/conpower.sh "
+su - admin -c  "scp -Rf ${TALADIR}/bin/docker/dockerfile admin@$BM_IP:$TALADIR/bin/"
 su - admin -c  "ssh admin@$BM_IP \"sudo bash $TALADIR/bin/bm2docker.sh  \"  "
 
 # timeout 20minits (7200)
