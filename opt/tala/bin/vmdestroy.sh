@@ -44,7 +44,7 @@ logme
 while getopts :H: OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly VM_NUM="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly VM_ID="${OPTARG}" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
@@ -54,7 +54,8 @@ readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 # 対象ホストの情報取得
-readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${HOST_ID}/ | ${JQ} .hostname)"
+readonly HOST_IP="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .host_server)"
+readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .hostname)"
 
 su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmremove.sh -n $VM_NAME \" "
 
