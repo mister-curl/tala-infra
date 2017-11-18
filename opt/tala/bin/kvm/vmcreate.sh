@@ -32,7 +32,7 @@ fi
 ## print usage
 
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m vm_memory_size] [-d vm_hdd_size] [-p md5_password] [-o distribution] [-b] [-r] [-6] [-s]
+    echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m vm_memory_size] [-d vm_hdd_size] [-p md5_password] [-o distribution] [-r] 
           -H: HostID(vm id)
 	  -n: vm name
 	  -c: vm cpu core
@@ -41,7 +41,7 @@ PRINT_USAGE () {
 	  -p: root password
 	  -o: os distribution 
 	  -r: reinstall vm.
-	  -b: boot"
+	  "
     exit 1
 }
 
@@ -265,7 +265,7 @@ mk_ubuntu1604() {
 [ "$#" -ge 1 ] || PRINT_USAGE
 
 
-while getopts H:n:c:m:d:p:o:rb OPT
+while getopts H:n:c:m:d:p:o:r OPT
 do
 	case ${OPT} in
 		"H" ) FLG_H="TRUE" ; readonly VM_ID="${OPTARG}" ;;
@@ -276,7 +276,6 @@ do
 		"o" ) FLG_O="TRUE" ; readonly VM_OS_OPTION="${OPTARG}" ;;
 		"p" ) FLG_P="TRUE" ; readonly USER_PASS="${OPTARG}" ;;
 		"r" ) FLG_R="TRUE" ;;
-		"b" ) FLG_B="TRUE" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
@@ -376,12 +375,8 @@ ${VIRSH} define "/etc/libvirt/qemu/${VM_NAME}.xml" || exit 1
 
 $VIRSH autostart ${VM_NAME}
 
-if [ "$FLG_B" = "TRUE" ]; then
-        $VIRSH start ${VM_NAME}
-        echo "vm create and start successfully"
-else
-        echo "vm create successfully"
-fi
+$VIRSH start ${VM_NAME}
+echo "vm create and start successfully"
 
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"

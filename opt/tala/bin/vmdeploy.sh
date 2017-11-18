@@ -66,13 +66,6 @@ readonly VM_MEMSIZE_MB="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .allocate_me
 readonly VM_DISKSIZE_GB="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .allocate_disk)"
 readonly VM_OS_OPTION="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .os)"
 readonly USER_PASS="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .password)"
-#HOST_IP="192.168.25.11"
-#VM_NAME="vm01"
-#VM_CORE="1"
-#VM_MEMSIZE_MB="2048"
-#VM_DISKSIZE_GB="10"
-#VM_OS_OPTION="ubuntu1604_x86-64"
-#USER_PASS="test"
 
 VM_PASS=$(sh -c "python -c 'import crypt; print crypt.crypt(\"$USER_PASS\", \"a2\")'")
 su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmcreate.sh -H $VM_ID -n $VM_NAME -c $VM_CORE -m $VM_MEMSIZE_MB -d $VM_DISKSIZE_GB -o $VM_OS_OPTION -p $USER_PASS \" "

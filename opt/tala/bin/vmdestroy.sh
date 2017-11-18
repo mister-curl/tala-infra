@@ -53,14 +53,8 @@ readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
-## APIのStatus を構築中に変更
-#${CURL} -H "Content-type: application/json" -d '{ "status": "VM削除中" }' -X POST ${URL_BASE}/vms/${HOST_ID}/status/ 
-
-
-
 # 対象ホストの情報取得
-#readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${HOST_ID}/ | ${JQ} .hostname)"
-VM_NAME="vm01"
+readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${HOST_ID}/ | ${JQ} .hostname)"
 
 su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmremove.sh -n $VM_NAME \" "
 
