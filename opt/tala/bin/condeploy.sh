@@ -68,9 +68,9 @@ su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/concreate.sh -H $CON
 
 
 sleep 1
-readonly VM_MAC="$(${CURL} ${URL_BASE}/containers/${VM_ID}/ | ${JQ} .mac_address)"
-VM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $VM_MAC |awk '/lease/{print $2}')
+readonly CON_MAC="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .mac_address)"
+CON_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $CON_MAC |awk '/lease/{print $2}')
 
-${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${VM_IP}"\" }" -X POST ${URL_BASE}/containers/${VM_ID}/ip_address/
+${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${CON_IP}"\" }" -X POST ${URL_BASE}/containers/${CON_ID}/ip_address/
 exit 0
 
