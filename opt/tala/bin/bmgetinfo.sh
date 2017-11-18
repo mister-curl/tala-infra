@@ -78,6 +78,4 @@ while true ;do
     sleep 10
 done
 
-shutdown -h now
-
 exit 0 

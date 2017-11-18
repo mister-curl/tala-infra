@@ -60,7 +60,6 @@ ${CURL} -H "Content-type: application/json" -d '{ "status": "KVM構築中" }' -X
 
 # 対象ホストの情報取得
 readonly BM_IP="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ip_address)"
-readonly BM_IP="192.168.25.19" 
 
 rm -f /home/admin/.ssh/known_hosts
 # timeout 20minits (7200)
@@ -101,12 +100,6 @@ STATUS=$(su - admin -c  "ssh admin@$BM_IP 'test -f /home/admin/lock && echo true
     TIME=$(( TIME + 1 ))
     sleep 10
 done
-
-#su - admin -c  "scp admin@$BM_IP:$TALADIR/log/bm2kvm.sh.log  ${TALADIR}/log/${BM_IP}_kvm.log"
-
-set +x
-#echo "==============KVM INSTALL LOG =========================="
-#cat ${TALADIR}/log/$BM_IP_kvm.log
 
 
 ${CURL} -H "Content-type: application/json" -d '{ "status": "KVM構築完了" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
