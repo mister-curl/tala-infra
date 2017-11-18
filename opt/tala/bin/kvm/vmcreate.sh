@@ -32,7 +32,7 @@ fi
 ## print usage
 
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m vm_memory_size] [-d vm_hdd_size] [-p md5_password] [-o distribution] [-b] [-r] [-6] [-s]
+    echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m vm_memory_size] [-d vm_hdd_size] [-p md5_password] [-o distribution] [-r] 
           -H: HostID(vm id)
 	  -n: vm name
 	  -c: vm cpu core
@@ -41,7 +41,7 @@ PRINT_USAGE () {
 	  -p: root password
 	  -o: os distribution 
 	  -r: reinstall vm.
-	  -b: boot"
+	  "
     exit 1
 }
 
@@ -265,10 +265,10 @@ mk_ubuntu1604() {
 [ "$#" -ge 1 ] || PRINT_USAGE
 
 
-while getopts H:n:c:m:d:p:o:rb OPT
+while getopts H:n:c:m:d:p:o:r OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly VM_NUM="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly VM_ID="${OPTARG}" ;;
 		"n" ) FLG_N="TRUE" ; readonly VM_NAME="${OPTARG}" ;;
 		"c" ) FLG_C="TRUE" ; readonly VM_CORE="${OPTARG}" ;;
 		"m" ) FLG_M="TRUE" ; readonly VM_MEMSIZE_MB="${OPTARG}" ;;
@@ -276,7 +276,6 @@ do
 		"o" ) FLG_O="TRUE" ; readonly VM_OS_OPTION="${OPTARG}" ;;
 		"p" ) FLG_P="TRUE" ; readonly USER_PASS="${OPTARG}" ;;
 		"r" ) FLG_R="TRUE" ;;
-		"b" ) FLG_B="TRUE" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
@@ -349,9 +348,9 @@ fi
 $BRCTL addif $BRIDGE0 ${IF_LIST[0]}
 $IFCONFIG $BRIDGE0 up
 
-VM_VNC="300${VM_NUM}"
-VMNIC0="vn${VM_NUM}-0"
-VM_MACBASE0=$(echo "obase=16 ; ibase=10 ; ${VM_NUM} + 100000" | bc)
+VM_VNC="$(echo "${VM_ID} + 10000" | bc)"
+VMNIC0="vn${VM_ID}-0"
+VM_MACBASE0=$(echo "obase=16 ; ibase=10 ; ${VM_ID} + 100000" | bc)
 VMMAC0=$(printf 9C:A3:BA:0 ; echo "${VM_MACBASE0}" | perl -ne '1 while $_ =~ s/(.*\w)(\w{2})/$1:$2/; print;')
 
 IFS=':'; set $VMMAC0; unset IFS
@@ -359,7 +358,7 @@ LINK_LOCAL="fe80::$(printf %02x $((0x$1 ^ 2)))$2:${3}ff:fe$4:$5$6"
 
 sed -e "s@__VM_NAME__@${VM_NAME}@" \
     -e "s@__VM_CORE__@${VM_CORE}@" \
-    -e "s@__VM_NUM__@${VM_NUM}@" \
+    -e "s@__VM_NUM__@${VM_ID}@" \
     -e "s@__VM_MEMSIZE__@${VM_MEMSIZE_KB}@" \
     -e "s@__VM_DISKPATH__@${SOURCE_DEV}@" \
     -e "s@__BRIDGE0__@${BRIDGE0}@" \
@@ -376,12 +375,17 @@ ${VIRSH} define "/etc/libvirt/qemu/${VM_NAME}.xml" || exit 1
 
 $VIRSH autostart ${VM_NAME}
 
-if [ "$FLG_B" = "TRUE" ]; then
-        $VIRSH start ${VM_NAME}
-        echo "vm create and start successfully"
-else
-        echo "vm create successfully"
-fi
+$VIRSH start ${VM_NAME}
+echo "vm create and start successfully"
+
+sleep 20
+
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
+
+${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${VMMAC0}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/mac_address/
+${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
 
 exit 0
 

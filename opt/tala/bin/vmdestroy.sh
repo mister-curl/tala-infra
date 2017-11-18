@@ -1,5 +1,5 @@
 #!/bin/bash
-# FileName: vmremove.sh
+# FileName: vmcreate.sh
 
 #set -e
 
@@ -14,7 +14,8 @@ set -x
 CMDNAME=$(basename "$0")
 CMDOPT=$*
 
-FLG_N=
+
+FLG_H=
 
 if [ "$(id -u)" -ne 0 ];then
 	echo 'This script is supposed to run under root.'
@@ -24,38 +25,40 @@ fi
 ## print usage
 
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME [-n guest_machine_name] 
-	  -n: vm name"
+    echo "usage: bash $CMDNAME [-H HostID] 
+          -H: HostID(vm id)"
     exit 1
 }
 
 TALADIR="/opt/tala"
 LOGDIR="${TALADIR}/log/"
 
-logme 
+logme
+
 
 ## オプション値の確認
 ## 必要なオプションが空の場合、および不正なオプションがあった場合はスクリプトを終了
 
 [ "$#" -ge 1 ] || PRINT_USAGE
 
-
-while getopts :n: OPT
+while getopts :H: OPT
 do
 	case ${OPT} in
-		"n" ) FLG_N="TRUE" ; readonly VM_NAME="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly VM_NUM="${OPTARG}" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
 
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
-VIRSH="/usr/bin/virsh"
+# 対象ホストの情報取得
+readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${HOST_ID}/ | ${JQ} .hostname)"
 
-SOURCE_DEV=/vm/$VM_NAME
+su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmremove.sh -n $VM_NAME \" "
 
-${VIRSH} destroy ${VM_NAME}
-${VIRSH} undefine ${VM_NAME} || exit 1
-rm -rf $SOURCE_DEV
+
 
 exit 0
 
