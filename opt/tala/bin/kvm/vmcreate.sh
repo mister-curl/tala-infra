@@ -268,7 +268,7 @@ mk_ubuntu1604() {
 while getopts H:n:c:m:d:p:o:rb OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly VM_NUM="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly VM_ID="${OPTARG}" ;;
 		"n" ) FLG_N="TRUE" ; readonly VM_NAME="${OPTARG}" ;;
 		"c" ) FLG_C="TRUE" ; readonly VM_CORE="${OPTARG}" ;;
 		"m" ) FLG_M="TRUE" ; readonly VM_MEMSIZE_MB="${OPTARG}" ;;
@@ -349,9 +349,9 @@ fi
 $BRCTL addif $BRIDGE0 ${IF_LIST[0]}
 $IFCONFIG $BRIDGE0 up
 
-VM_VNC="300${VM_NUM}"
-VMNIC0="vn${VM_NUM}-0"
-VM_MACBASE0=$(echo "obase=16 ; ibase=10 ; ${VM_NUM} + 100000" | bc)
+VM_VNC="$(echo "${VM_ID} + 10000" | bc)"
+VMNIC0="vn${VM_ID}-0"
+VM_MACBASE0=$(echo "obase=16 ; ibase=10 ; ${VM_ID} + 100000" | bc)
 VMMAC0=$(printf 9C:A3:BA:0 ; echo "${VM_MACBASE0}" | perl -ne '1 while $_ =~ s/(.*\w)(\w{2})/$1:$2/; print;')
 
 IFS=':'; set $VMMAC0; unset IFS
@@ -359,7 +359,7 @@ LINK_LOCAL="fe80::$(printf %02x $((0x$1 ^ 2)))$2:${3}ff:fe$4:$5$6"
 
 sed -e "s@__VM_NAME__@${VM_NAME}@" \
     -e "s@__VM_CORE__@${VM_CORE}@" \
-    -e "s@__VM_NUM__@${VM_NUM}@" \
+    -e "s@__VM_NUM__@${VM_ID}@" \
     -e "s@__VM_MEMSIZE__@${VM_MEMSIZE_KB}@" \
     -e "s@__VM_DISKPATH__@${SOURCE_DEV}@" \
     -e "s@__BRIDGE0__@${BRIDGE0}@" \
@@ -382,6 +382,14 @@ if [ "$FLG_B" = "TRUE" ]; then
 else
         echo "vm create successfully"
 fi
+
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
+
+${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${VM_IP}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/ip_address/
+${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${VMMAC0}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/mac_address/
+${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
 
 exit 0
 
