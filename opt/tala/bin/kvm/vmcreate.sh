@@ -378,11 +378,12 @@ $VIRSH autostart ${VM_NAME}
 $VIRSH start ${VM_NAME}
 echo "vm create and start successfully"
 
+sleep 20
+
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
-${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${VM_IP}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/ip_address/
 ${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${VMMAC0}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/mac_address/
 ${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
 
