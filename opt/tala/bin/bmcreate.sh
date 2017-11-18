@@ -46,12 +46,10 @@ PRINT_USAGE () {
 ## オプション値の確認
 [ "$#" -ge 1 ] || PRINT_USAGE
 
-while getopts :H:d:U: OPT
+while getopts :H: OPT
 do
         case ${OPT} in
                 "H" ) FLG_H="TRUE" ; readonly HOST_ID="${OPTARG}";;
-                "d" ) FLG_d="TRUE" ; readonly DIST_OPTION="${OPTARG}" ;;
-                "U" ) FLG_U="TRUE" ; readonly USER_NAME="${OPTARG}" ;;
                 \? ) PRINT_USAGE ;; 
         esac
 done
@@ -61,17 +59,7 @@ if [ "$FLG_H" = "TRUE" ]; then
 else
 	EXIT
 fi
-if [ "$FLG_d" = "TRUE" ]; then
-	echo "DIST_OPTION : ${DIST_OPTION} 指定されました。 " 
-else
-	EXIT
-fi
 
-if [ "$FLG_U" = "TRUE" ]; then
-	echo "USER_NAME : ${USER_NAME} 指定されました。 " 
-else
-	EXIT
-fi
 
 
 [ -d /opt/tala/nodes/${HOST_ID} ] || exit 1 
@@ -92,14 +80,12 @@ readonly BM_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .hostname)"
 readonly IPMI_IP="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_ip_address)"
 readonly IPMI_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_user_name)"
 readonly IPMI_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_password)"
-
-readonly USER_PASS="test"
-#readonly USER_PASS="$($CURL $URL_BASE/users/$USER_NAME | jq .)" 
+readonly DIST_OPTION="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .os)"
+readonly USER_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .password)"
 
 TALA_SERVER=$(grep tala-server /etc/hosts | awk '{print $1}')
 
 ## Setting File change
-
 BM_IP=
 readonly BM_MAC_LIST="$(awk '/HWaddr/{print $5}' ${TALADIR}/nodes/${HOST_ID}/getinfo/ifconfig-a | tr '[A-Z]' '[a-z]' )"
 for mactpl in ${BM_MAC_LIST[*]} ;do
@@ -120,7 +106,6 @@ for mactpl in ${BM_MAC_LIST[*]} ;do
 		     ;;
 	    esac
 
-	sed -i -e "s/__USER_NAME__/${USER_NAME}/g" ${SCRIPT}
 	sed -i -e "s/__USER_PASS__/${USER_PASS}/g" ${SCRIPT}
 	sed -i -e "s/__BM_NAME__/${BM_NAME}/g" ${SCRIPT}
 	sed -i -e "s/__TALASERVER__/${TALA_SERVER}/g" ${SCRIPT}
@@ -162,11 +147,12 @@ for mac in ${BM_MAC_LIST[*]} ;do
 	# BMで利用するIPの返却
 	if [ "$BM_IP" = "" ] ;then 
 		BM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -B1 $mac |awk '/lease/{print $2}')
+${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${BM_IP}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/ip_address/
+${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${mac}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/mac_address/
 	else
 		break
 	fi
 done
-${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${BM_IP}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/ip_address/
 ${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
 
 for mactpl in ${BM_MAC_LIST[*]} ;do

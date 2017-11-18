@@ -25,7 +25,6 @@ logme
 
 
 OS_IMG=__OS_IMG__
-USER_NAME=__USER_NAME__
 USER_PASS_ORG=__USER_PASS__
 BM_NAME=__BM_NAME__
 TALA_SERVER=__TALASERVER__
@@ -72,8 +71,6 @@ if [ "$OS_IMG" = "CentOS7_master.img.gz" ] ;then
 	kpartx -a /dev/sda
 	mount -t xfs /dev/mapper/sda4  ${MOUNTPOINT}
 	    xfs_growfs ${MOUNTPOINT}
-	    grep -q ${USER_NAME} ${MOUNTPOINT}/etc/passwd || ( echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs && chroot "${MOUNTPOINT}" useradd "${USER_NAME}" -s /bin/bash )
-	    chroot "${MOUNTPOINT}" usermod -p "${USER_PASS}" "${USER_NAME}"
 	    echo "${BM_NAME}" >  ${MOUNTPOINT}/etc/hostname
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
@@ -105,10 +102,6 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 	mount /dev/mapper/sda3  ${MOUNTPOINT}
 	    tune2fs -c -1 -i 0 "/dev/mapper/sda3"
 	    resize2fs "/dev/mapper/sda3"
-            grep -q ${USER_NAME} ${MOUNTPOINT}/etc/passwd || ( echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs && chroot "${MOUNTPOINT}" useradd "${USER_NAME}" -s /bin/bash )
-	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} ${USER_NAME}
-	    chroot "${MOUNTPOINT}" usermod -s /bin/bash  ${USER_NAME}
-	    chroot "${MOUNTPOINT}" usermod -g sudo ${USER_NAME}
             chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
 	    echo "${BM_NAME}" >  ${MOUNTPOINT}/etc/hostname
 	    echo "CREATE_HOME=yes" >> ${MOUNTPOINT}//etc/login.defs
@@ -120,13 +113,9 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 			exit 0
 		EOF
 	    mkdir -p ${MOUNTPOINT}/root/.ssh/
-	    mkdir -p ${MOUNTPOINT}/home/${USER_NAME}/.ssh/ 
 	    mkdir -p ${MOUNTPOINT}/home/admin/.ssh/
-	    chroot "${MOUNTPOINT}" chown ${USER_NAME}. /home/${USER_NAME}/.ssh/
 	    chroot "${MOUNTPOINT}" chown admin.  /home/admin/.ssh/
 
-	    scp ${TALA_SERVER}:/opt/tala/key/${USER_NAME} ${MOUNTPOINT}/home/${USER_NAME}/.ssh/authorized_keys
-	    scp ${TALA_SERVER}:/opt/tala/key/${USER_NAME} ${MOUNTPOINT}/root/.ssh/authorized_keys
 	    scp ${TALA_SERVER}:/home/admin/.ssh/id_rsa.pub ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
 
 
@@ -168,11 +157,6 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	mount /dev/mapper/sda3  ${MOUNTPOINT}
 	    tune2fs -c -1 -i 0 "/dev/mapper/sda3"
 	    resize2fs "/dev/mapper/sda3"
-            grep -q ${USER_NAME} ${MOUNTPOINT}/etc/passwd || ( echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs && chroot "${MOUNTPOINT}" useradd "${USER_NAME}" -s /bin/bash )
-	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} ${USER_NAME}
-	    chroot "${MOUNTPOINT}" usermod -s /bin/bash  ${USER_NAME}
-	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} root
-	    chroot "${MOUNTPOINT}" usermod -g sudo ${USER_NAME}
 	    chroot "${MOUNTPOINT}" systemctl enable sshd
 	    echo "${BM_NAME}" >  ${MOUNTPOINT}/etc/hostname
 	    echo "CREATE_HOME=yes" >> ${MOUNTPOINT}//etc/login.defs
@@ -180,14 +164,10 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
             chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
 
 	    mkdir -p ${MOUNTPOINT}/root/.ssh/
-	    mkdir -p ${MOUNTPOINT}/home/${USER_NAME}/.ssh/ 
 	    mkdir -p ${MOUNTPOINT}/home/admin/.ssh/
-	    chroot  "${MOUNTPOINT}" chown ${USER_NAME}. /home/${USER_NAME}/.ssh/
 	    chroot  "${MOUNTPOINT}" chown admin.  /home/admin/.ssh/
 
 
-	    scp ${TALA_SERVER}:/opt/tala/key/${USER_NAME} ${MOUNTPOINT}/home/${USER_NAME}/.ssh/authorized_keys
-	    scp ${TALA_SERVER}:/opt/tala/key/${USER_NAME} ${MOUNTPOINT}/root/.ssh/authorized_keys
 	    scp ${TALA_SERVER}:/home/admin/.ssh/id_rsa.pub ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
 
 	echo "admin ALL=(ALL:ALL) NOPASSWD:ALL" >> ${MOUNTPOINT}/etc/sudoers
