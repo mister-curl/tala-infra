@@ -107,12 +107,22 @@ if [ "$OPE" = "on" ] ;then
     set -x
 
 
-    ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${IPADDR_NEW}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/ip_address/
-    ${CURL} -H "Content-type: application/json" -d '{ "status": "起動中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/
+    ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${IPADDR_NEW}"\" }" -X POST ${URL_BASE}/containers/${HOST_ID}/ip_address/
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "wakeup now" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/
 
 elif [ "$OPE" = "off" ] ;then
     ${DOCKER} kill ${CON_NAME}
-    ${CURL} -H "Content-type: application/json" -d '{ "status": "停止" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "shutting now" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/
+elif [ "$OPE" = "status" ] ;then
+    STATUS=$($DOCKER ps | grep -q ${CON_NAME} && echo 0 || echo 1)
+    echo $STATUS
+    if [ "$STATUS" = "0" ] ;then
+        ${CURL} -H "Content-type: application/json" -d '{ "status": "on" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/
+    elif [ "$STATUS" = "1" ] ;then
+        ${CURL} -H "Content-type: application/json" -d '{ "status": "off" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/
+    else
+        ${CURL} -H "Content-type: application/json" -d '{ "status": "error" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/
+    fi
 fi
 
 
