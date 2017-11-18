@@ -99,10 +99,10 @@ $DOCKER pull centos:7
 
 
 ## docker image build
-cd /opt/tala/bin/dokerfile/ubuntu1404
+cd /opt/tala/bin/dockerfile/ubuntu1404
 $DOCKER build --no-cache -t tala/ubuntu:14.04 .
 
-cd /opt/tala/bin/dokerfile/ubuntu1604
+cd /opt/tala/bin/dockerfile/ubuntu1604
 $DOCKER build --no-cache -t tala/ubuntu:16.04 .
 
 

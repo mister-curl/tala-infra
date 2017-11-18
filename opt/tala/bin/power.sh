@@ -63,7 +63,6 @@ fi
 
 # 対象ホストの情報取得
 readonly CURL="/usr/bin/curl -s"
-readonly CURL_UP="/usr/bin/curl -s -H \"Content-type: application/json\""
 readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
@@ -128,6 +127,27 @@ elif [ "$TYPE" = "bm" ] ;then
 		$CURL -H "Content-type: application/json" -d '{ "power": "error" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/power/
 	fi
     fi
+elif [ "$TYPE" = "container" ] ;then
+    readonly DOCKER="/usr/bin/docker"
+    readonly HOST_IP="$(${CURL} ${URL_BASE}/containers/${HOST_ID}/ | ${JQ} .host_server)"
+    readonly VM_NAME="$(${CURL} ${URL_BASE}/containers/${HOST_ID}/ | ${JQ} .hostname)"
+
+
+    if [ "$OPE" = "on" ] ;then
+        su - admin -c  "ssh admin@$HOST_IP \"sudo /opt/tala/bin/conpower.sh -H $HOST_ID -n $VM_NAME -O on \" "
+
+    elif [ "$OPE" = "off" ] ;then
+        su - admin -c  "ssh admin@$HOST_IP \"sudo /opt/tala/bin/conpower.sh -H $HOST_ID -n $VM_NAME -O off \" "
+
+    elif [ "$OPE" = "restart" ] ;then
+        su - admin -c  "ssh admin@$HOST_IP \"sudo /opt/tala/bin/conpower.sh -H $HOST_ID -n $VM_NAME -O off \" "
+        su - admin -c  "ssh admin@$HOST_IP \"sudo /opt/tala/bin/conpower.sh -H $HOST_ID -n $VM_NAME -O on \" "
+
+    elif [ "$OPE" = "status" ] ;then
+        su - admin -c  "ssh admin@$HOST_IP \"sudo /opt/tala/bin/conpower.sh -H $HOST_ID -n $VM_NAME -O status \" "
+    fi
+
 fi
+
 
 exit 0
