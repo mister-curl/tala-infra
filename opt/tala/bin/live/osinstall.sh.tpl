@@ -28,6 +28,7 @@ OS_IMG=__OS_IMG__
 USER_PASS_ORG=__USER_PASS__
 BM_NAME=__BM_NAME__
 TALA_SERVER=__TALASERVER__
+VNC_PORT=__VNC_PORT__
 
 #USER_PASS=$(python -c 'import crypt; print crypt.crypt("$USER_PASS_ORG", "a2")')
 USER_PASS=$(sh -c "python -c 'import crypt; print crypt.crypt(\"$USER_PASS_ORG\", \"a2\")'")
@@ -175,6 +176,35 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	mkdir -p ${MOUNTPOINT}${LOGDIR}
 	mkdir -p ${MOUNTPOINT}${BINDIR}
 	chroot "${MOUNTPOINT}" chown -R admin. ${TALADIR}
+
+	cat <<- EOL > "${MOUNTPOINT}/opt/tala/bin/vncinit.sh" 
+	#!/bin/sh
+	set -x
+	USER=root
+	HOME=/root
+	export USER HOME
+
+	apt update	
+	apt install -y vnc4server
+	
+	sed -i "s/vncPort = 5900 + \\\$displayNumber/vncPort = ${VNC_PORT}/" /usr/bin/vnc4server
+	
+	vnc4server -SecurityTypes None <<-EOF
+	  password
+	  password
+	EOF
+	
+	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport ${VNC_PORT} -j ACCEPT
+	iptables-save > /etc/iptables/iptables.rules
+	
+	echo "vnc4server -SecurityTypes None" >> /etc/rc.local
+	sed -i "/vncinit.sh/d" /etc/rc.local
+	
+	EOL
+
+	sed -i "/exit 0/d" ${MOUNTPOINT}/etc/rc.local
+	echo "bash /opt/tala/bin/vncinit.sh" >> ${MOUNTPOINT}/etc/rc.local
+
 
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda

@@ -411,6 +411,10 @@ echo "vm create and start successfully"
 
 sleep 20
 
+IPTABLE="/sbin/iptables"
+IPTABLES_SAVE="/sbin/iptables-save"
+$IPTABLES -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport ${VM_VNC} -j ACCEPT
+$IPTABLES_SAVE > /etc/iptables/iptables.rules
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"

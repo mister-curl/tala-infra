@@ -84,9 +84,9 @@ readonly BM_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .hostname)"
 readonly IPMI_IP="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_ip_address)"
 readonly IPMI_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_user_name)"
 readonly IPMI_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_password)"
+readonly VNC_PORT="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .vnc_port)"
 readonly DIST_OPTION="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .os)"
 readonly USER_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .password)"
-
 TALA_SERVER=$(grep tala-server /etc/hosts | awk '{print $1}')
 
 ## Setting File change
@@ -113,6 +113,7 @@ for mactpl in ${BM_MAC_LIST[*]} ;do
 	sed -i -e "s/__USER_PASS__/${USER_PASS}/g" ${SCRIPT}
 	sed -i -e "s/__BM_NAME__/${BM_NAME}/g" ${SCRIPT}
 	sed -i -e "s/__TALASERVER__/${TALA_SERVER}/g" ${SCRIPT}
+	sed -i -e "s/__VNC_PORT__/${VNC_PORT}/g" ${SCRIPT}
 
 done
 
