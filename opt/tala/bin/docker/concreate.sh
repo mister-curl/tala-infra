@@ -17,12 +17,8 @@ CMDOPT=$*
 
 FLG_H=
 FLG_N=
-FLG_C=
-FLG_M=
-FLG_D=
 FLG_O=
-FLG_R=
-FLG_B=
+FLG_P=
 
 if [ "$(id -u)" -ne 0 ];then
 	echo 'This script is supposed to run under root.'
@@ -30,19 +26,18 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
-
+EXIT () {
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/ 
+    exit 1
+}
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m container_memory_size] [-d container_hdd_size] [-p md5_password] [-o distribution] [-b] [-r] 
-          -H: HostID
+    echo "usage: bash $CMDNAME [-n guest_machine_name] [-p md5_password] [-o distribution] [-H ContainerID] 
+          -H: ContainerID
 	  -n: container name
-	  -c: container cpu core
-	  -m: container memomy size (MByte)
-	  -d: container hdd size (GByte)
 	  -p: root password
 	  -o: os distribution 
-	  -r: reinstall container.
-	  -b: boot"
-    exit 1
+	  "
+    EXIT
 }
 
 
@@ -50,7 +45,7 @@ TALADIR="/opt/tala"
 LOGDIR="${TALADIR}/log/"
 DOCKER="/usr/bin/docker"
 
-#logme
+logme
 
 
 
@@ -63,14 +58,10 @@ DOCKER="/usr/bin/docker"
 while getopts H:n:c:m:d:p:o:rb OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly CON_NUM="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly CON_ID="${OPTARG}" ;;
 		"n" ) FLG_N="TRUE" ; readonly CON_NAME="${OPTARG}" ;;
-		"c" ) FLG_C="TRUE" ; readonly CON_CORE="${OPTARG}" ;;
-		"m" ) FLG_M="TRUE" ; readonly CON_MEMSIZE_MB="${OPTARG}" ;;
 		"o" ) FLG_O="TRUE" ; readonly CON_OS_OPTION="${OPTARG}" ;;
 		"p" ) FLG_P="TRUE" ; readonly USER_PASS="${OPTARG}" ;;
-		"r" ) FLG_R="TRUE" ;;
-		"b" ) FLG_B="TRUE" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
@@ -78,23 +69,30 @@ done
 CON_PASS=$(sh -c "python -c 'import crypt; print crypt.crypt(\"$USER_PASS\", \"a2\")'")
 
 
+## CON_IDが指定されて無い場合は処理を停止する。
+if [ "$FLG_H" = "TRUE" ]; then
+	echo "CON_ID : ${CON_ID} 指定されました。 " 
+else
+	PRINT_USAGE
+fi
 ## CONが指定されて無い場合は処理を停止する。
 if [ "$FLG_N" = "TRUE" ]; then
 	echo "CON_NAME : ${CON_NAME} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
-## 初回作成 or リインストール
-if [ "$FLG_R" = "TRUE" ]; then
-    echo "skip check host server resource"
+## OSが指定されて無い場合は処理を停止する。
+if [ "$FLG_O" = "TRUE" ]; then
+	echo "CON_OS_OPTION : ${CON_OS_OPTION} 指定されました。 " 
+else
+	PRINT_USAGE
 fi
-
 ## パスワードが指定されて無い場合は処理を停止する。
 if [ "$FLG_P" = "TRUE" ]; then
 	echo "CON_PASS : ${CON_PASS}"
-#else
-#	exit 1
+else
+	PRINT_USAGE
 fi
 
 
@@ -110,18 +108,13 @@ case $CON_OS_OPTION in
     ;;
   *)
     echo "指定のディストリビューションは存在しません。"
-    exit 1
+    PRINT_USAGE
     ;;
 esac
 
-CONTAINER_ID=$(${DOCKER} run -i -t --privileged -d -m ${CON_MEMSIZE_MB}m --name=${CON_NAME}  --restart=always ${DIST} /sbin/init || exit 1)
+CONTAINER_ID=$(${DOCKER} run -i -t --privileged -d  --name=${CON_NAME}  --restart=always ${DIST} /sbin/init || exit 1)
 
 [ $? -eq 1 ] && exit 1
-
-# get docker pid, ip address (allocated by docker)
-#PID=$(docker inspect --format '{{.State.Pid}}' $CONTAINER_ID)
-##IPADDR=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' $CONTAINER_ID)
-#IPSUB=$(docker inspect --format '{{.NetworkSettings.IPPrefixLen}}' $CONTAINER_ID)
 
 PID=`docker inspect --format '{{.State.Pid}}' $CONTAINER_ID`
 IPADDR=`docker inspect --format '{{.NetworkSettings.IPAddress}}' $CONTAINER_ID`
@@ -169,12 +162,6 @@ $NSENTER -t $PID -n useradd "ubuntu" -s /bin/bash -g 0
 $NSENTER -t $PID -n usermod -p "${CON_PASS}" ubuntu
 
 
-if [ "$FLG_B" = "TRUE" ]; then
-        echo "vm create and start successfully"
-else
-        echo "vm create successfully"
-fi
-
 IPADDR_NEW=$($NSENTER -t $PID -n ip a s eth0  | awk '$1~/^inet$/{print $2}')
 
 set +x
@@ -183,5 +170,18 @@ echo Container NAME $CON_NAME
 echo New IP  : $IPADDR_NEW
 echo -------------------------------------
 set -x
+
+
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
+
+CONMAC0=$($DOCKER inspect --format '{{.NetworkSettings.MacAddress}}' $CON_NAME)
+
+${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${CONMAC0}"\" }" -X POST ${URL_BASE}/containers/${CON_ID}/mac_address/
+${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/containers/${CON_ID}/status/
+
+
+
 exit 0
 

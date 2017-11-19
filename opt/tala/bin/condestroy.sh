@@ -1,5 +1,5 @@
 #!/bin/bash
-# FileName: vmcreate.sh
+# FileName: condestroy.sh
 
 #set -e
 
@@ -23,7 +23,6 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
-
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME [-H HostID] 
           -H: HostID(vm id)"
@@ -44,15 +43,15 @@ logme
 while getopts :H: OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly VM_ID="${OPTARG}" ;;
+		"H" ) FLG_H="TRUE" ; readonly CON_ID="${OPTARG}" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
 
 if [ "$FLG_H" = "TRUE" ]; then
-        echo "VM_ID : ${VM_ID} 指定されました。 "
+        echo "CON_ID : ${CON_ID} 指定されました。 "
 else
-	PRINT_USAGE
+        PRINT_USAGE
 fi
 
 readonly CURL="/usr/bin/curl -s"
@@ -60,10 +59,10 @@ readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 # 対象ホストの情報取得
-readonly HOST_IP="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .host_server)"
-readonly VM_NAME="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .hostname)"
+readonly HOST_IP="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .host_server)"
+readonly CON_NAME="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .hostname)"
 
-su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmremove.sh -n $VM_NAME \" "
+su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/conremove.sh -n $CON_NAME \" "
 
 
 

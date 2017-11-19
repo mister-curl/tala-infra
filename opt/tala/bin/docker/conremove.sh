@@ -2,6 +2,7 @@
 # FileName: vmcreate.sh
 
 #set -e
+set -x
 
 logme () {
     exec </dev/null
@@ -15,7 +16,6 @@ CMDNAME=$(basename "$0")
 CMDOPT=$*
 
 
-FLG_H=
 FLG_N=
 
 if [ "$(id -u)" -ne 0 ];then
@@ -25,8 +25,7 @@ fi
 
 
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME [-H HostID]  [-n guest_machine_name] 
-          -H: HostID
+    echo "usage: bash $CMDNAME  [-n guest_machine_name] 
 	  -n: container name"
     exit 1
 }
@@ -36,7 +35,7 @@ TALADIR="/opt/tala"
 LOGDIR="${TALADIR}/log/"
 DOCKER="/usr/bin/docker"
 
-#logme
+logme
 
 
 
@@ -49,14 +48,18 @@ DOCKER="/usr/bin/docker"
 while getopts H:n: OPT
 do
 	case ${OPT} in
-		"H" ) FLG_H="TRUE" ; readonly CON_NUM="${OPTARG}" ;;
 		"n" ) FLG_N="TRUE" ; readonly CON_NAME="${OPTARG}" ;;
 		\? ) PRINT_USAGE ;; 
 	esac
 done
 
 
-
+if [ "$FLG_N" = "TRUE" ]; then
+        echo "CON_NAME : ${CON_NAME} 指定されました。 "
+else
+        PRINT_USAGE
+fi
+ 
 
 set +x
 echo -------------------------------------

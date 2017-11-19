@@ -23,7 +23,7 @@ echo "==========================="
 ## root ユーザ以外で実行された場合、スクリプトを終了
 if [ "$(id -u)" -ne 0 ];then
         echo 'This script is supposed to run under root.'
-	EXIT
+	PRINT_USAGE
 fi
 
 ## print usage
@@ -33,10 +33,8 @@ EXIT () {
 }
 
 PRINT_USAGE () {
-    echo "usage: bash $CMDNAME  [-H hostid ]  [-U username ] [-P md5_password] [-d distribution]  
+    echo "usage: bash $CMDNAME  [-H hostid ]  
           -H: host id
-          -d: distribution
-          -U: user name
           "
     EXIT
 }
@@ -57,12 +55,18 @@ done
 if [ "$FLG_H" = "TRUE" ]; then
 	echo "HOST_ID : ${HOST_ID} 指定されました。 " 
 else
-	EXIT
+	PRINT_USAGE
 fi
 
 
-
-[ -d /opt/tala/nodes/${HOST_ID} ] || exit 1 
+# bmgetinfo.shが先に実行されていない場合は強制州施用
+if [ -d /opt/tala/nodes/${HOST_ID} ] ;then
+   echo "bmgetinfo.sh が実行されていることを確認しました"
+else
+   echo "bmgetinfo.shを事前に実行してください"
+   exit 1
+fi
+    
 
 
 
@@ -130,7 +134,7 @@ while true ;do
         EXIT 
     fi
 
-    TIME=$(( TIME + 1 ))
+    TIME=$(( TIME + 10 ))
     sleep 10
 done
 

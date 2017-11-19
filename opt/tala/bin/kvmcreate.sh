@@ -24,6 +24,10 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
+EXIT () {
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/
+    exit 1
+}
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME  [-H hostid ] "
     exit 1
@@ -43,7 +47,7 @@ done
 if [ "$FLG_H" = "TRUE" ]; then
 	echo "HOST_ID : ${HOST_ID} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 
@@ -71,9 +75,9 @@ SSH_STATUS=$(su - admin -c  "ssh -oStrictHostKeyChecking=no admin@$BM_IP 'test -
     if [ "$SSH_STATUS" = "true" ] ;then
         break
     elif [ "$SSH_TIME" -gt "${SSH_TIME_OUT}" ] ;then
-        exit 1
+	EXIT
     fi
-    SSH_TIME=$(( SSH_TIME + 1 ))
+    SSH_TIME=$(( SSH_TIME + 10 ))
     sleep 10
 done
 
@@ -94,10 +98,10 @@ STATUS=$(su - admin -c  "ssh admin@$BM_IP 'test -f /home/admin/lock && echo true
     if [ "$STATUS" = "true" ] ;then
         break
     elif [ "$TIME" -gt "${TIME_OUT}" ] ;then
-        exit 1
+	EXIT
     fi
 
-    TIME=$(( TIME + 1 ))
+    TIME=$(( TIME + 10 ))
     sleep 10
 done
 
