@@ -23,7 +23,6 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
-
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME [-H HostID] 
           -H: HostID(vm id)"
@@ -48,6 +47,12 @@ do
 		\? ) PRINT_USAGE ;; 
 	esac
 done
+
+if [ "$FLG_H" = "TRUE" ]; then
+        echo "CON_ID : ${CON_ID} 指定されました。 "
+else
+        PRINT_USAGE
+fi
 
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"

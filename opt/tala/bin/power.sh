@@ -8,9 +8,9 @@ CMDOPT=$*
 
 . /opt/tala/bin/common.cfg
 
-FLG_H="null"
-FLG_O="null"
-FLG_T="null"
+FLG_H=""
+FLG_O=""
+FLG_T=""
 
 #logme
 ##
@@ -25,7 +25,6 @@ if [ "$(id -u)" -ne 0 ];then
         exit 1
 fi
 
-## print usage
 
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME  [-H hostid ]  [-O Operation] [-T type]
@@ -49,16 +48,22 @@ do
         esac
 done
 
-if [ "$FLG_H" = "null" ]; then
-	exit 1
+if [ "$FLG_H" = "TRUE" ]; then
+	echo "HOST_ID : $HOST_ID が指定されました"
+else
+	PRINT_USAGE
 fi
 
-if [ "$FLG_O" = "null" ]; then
-	exit 1
+if [ "$FLG_O" = "TRUE" ]; then
+	echo "OPE : $OPE が指定されました"
+else
+	PRINT_USAGE
 fi
 
-if [ "$FLG_T" = "null" ]; then
-	exit 1
+if [ "$FLG_T" = "TRUE" ]; then
+	echo "TYPE : $TYPE が指定されました"
+else
+	PRINT_USAGE
 fi
 
 # 対象ホストの情報取得

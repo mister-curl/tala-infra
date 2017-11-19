@@ -49,6 +49,12 @@ do
 	esac
 done
 
+if [ "$FLG_H" = "TRUE" ]; then
+        echo "VM_ID : ${VM_ID} 指定されました。 "
+else
+	PRINT_USAGE
+fi
+
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"

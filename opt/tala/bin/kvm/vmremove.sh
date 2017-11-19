@@ -3,6 +3,8 @@
 
 #set -e
 
+set -x
+
 logme () {
     exec </dev/null
     exec >$LOGDIR/$CMDNAME.$(date +%Y%m%d-%H%M%S).$$.log
@@ -47,6 +49,12 @@ do
 		\? ) PRINT_USAGE ;; 
 	esac
 done
+
+if [ "$FLG_N" = "TRUE" ]; then
+        echo "VM_NAME : ${VM_NAME} 指定されました。 "
+else
+        PRINT_USAGE
+fi
 
 
 VIRSH="/usr/bin/virsh"

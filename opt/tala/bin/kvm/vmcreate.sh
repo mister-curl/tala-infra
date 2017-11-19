@@ -289,19 +289,46 @@ KPARTX="/sbin/kpartx"
 BRCTL="/sbin/brctl"
 IFCONFIG="/sbin/ifconfig"
 
+## VM_IDが指定されて無い場合は処理を停止する。
+if [ "$FLG_H" = "TRUE" ]; then
+	echo "VM_ID : ${VM_ID} 指定されました。 " 
+else
+	exit 1
+fi
+
 ## VMが指定されて無い場合は処理を停止する。
 if [ "$FLG_N" = "TRUE" ]; then
 	echo "VM_NAME : ${VM_NAME} 指定されました。 " 
 else
 	exit 1
+
+## CPU COREが指定されて無い場合は処理を停止する。
+
+if [ "$FLG_C" = "TRUE" ]; then
+	echo "VM_CORE : ${VM_CORE} 指定されました。 " 
+else
+	exit 1
 fi
 
-## 初回作成 or リインストール
-if [ "$FLG_R" = "TRUE" ]; then
-    echo "skip check host server resource"
-    $VIRSH domstate $VM_NAME || exit 1
-    VM_CORE=$($VIRSH dumpxml $VM_NAME | xmlstarlet sel -t -v "//vcpu")
-    VM_MEMSIZE_KB=$($VIRSH dumpxml $VM_NAME | xmlstarlet sel -t -v "//memory")
+## MEMORY SIZEが指定されて無い場合は処理を停止する。
+if [ "$FLG_M" = "TRUE" ]; then
+	echo "VM_MEMSIZE_MB : ${VM_MEMSIZE_MB} 指定されました。 " 
+else
+	exit 1
+fi
+
+## DISK SIZEが指定されて無い場合は処理を停止する。
+if [ "$FLG_D" = "TRUE" ]; then
+	echo "VM_DISKSIZE_GB : ${VM_DISKSIZE_GB} 指定されました。 " 
+else
+	exit 1
+fi
+
+## OSが指定されて無い場合は処理を停止する。
+if [ "$FLG_O" = "TRUE" ]; then
+	echo "VM_OS_OPTION : ${VM_OS_OPTION} 指定されました。 " 
+else
+	exit 1
 fi
 
 ## パスワードが指定されて無い場合は処理を停止する。

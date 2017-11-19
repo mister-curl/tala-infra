@@ -24,6 +24,10 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
+EXIT () {
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/
+    exit 1
+}
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME  [-H hostid ] "
     exit 1
@@ -43,7 +47,7 @@ done
 if [ "$FLG_H" = "TRUE" ]; then
 	echo "HOST_ID : ${HOST_ID} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE1
 fi
 
 

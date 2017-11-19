@@ -2,6 +2,7 @@
 # FileName: condeploy.sh
 
 #set -e
+set -x
 
 logme () {
     exec </dev/null
@@ -22,18 +23,21 @@ if [ "$(id -u)" -ne 0 ];then
 	exit 1
 fi
 
-## print usage
+EXIT () {
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/ 
+}
 
+## print usage
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME [-H HostID] 
           -H: HostID(container id)"
-    exit 1
+    EXIT
 }
 
 TALADIR="/opt/tala"
 LOGDIR="${TALADIR}/log/"
 
-#logme
+logme
 
 
 ## オプション値の確認
@@ -48,6 +52,12 @@ do
 		\? ) PRINT_USAGE ;; 
 	esac
 done
+
+if [ "$FLG_H" = "TRUE" ]; then
+        echo "CON_ID : ${CON_ID} 指定されました。 "
+else
+	PRINT_USAGE
+fi
 
 readonly CURL="/usr/bin/curl -s"
 readonly JQ="/usr/bin/jq -r"
