@@ -30,6 +30,10 @@ if [ "$(id -u)" -ne 0 ];then
 fi
 
 ## print usage
+EXIT () {
+    ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/vms/${HOST_ID}/status/
+    exit 1
+}
 
 PRINT_USAGE () {
     echo "usage: bash $CMDNAME [-n guest_machine_name] [-c cpu_core] [-m vm_memory_size] [-d vm_hdd_size] [-p md5_password] [-o distribution] [-r] 
@@ -42,7 +46,7 @@ PRINT_USAGE () {
 	  -o: os distribution 
 	  -r: reinstall vm.
 	  "
-    exit 1
+    EXIT
 }
 
 
@@ -55,7 +59,7 @@ logme
 
 
 mk_ubuntu1404() {
-	ddrescue "/${IMG_DIR}/${VM_OS}_master.img" "${SOURCE_DEV}" -q --block-size=4096 --force || exit 1
+	ddrescue "/${IMG_DIR}/${VM_OS}_master.img" "${SOURCE_DEV}" -q --block-size=4096 --force || PRINT_USAGE
 	sync
 
 	## fix disk partition
@@ -81,7 +85,7 @@ mk_ubuntu1404() {
 
 
 	## 設定ファイル修正
-	MOUNTPOINT=$(mktemp -d) || exit 1
+	MOUNTPOINT=$(mktemp -d) || PRINT_USAGE
 	${KPARTX} -a "${SOURCE_DEV}"
 	sync
 	sleep 4
@@ -133,8 +137,8 @@ mk_ubuntu1404() {
 
 	# mkfs
 	FSTAB="${MOUNTPOINT}/etc/fstab"
-	BLKID_SWAP=$(/sbin/blkid -o value -s UUID "/dev/mapper/${VG_NAME}-${LV_VOL}p2") || exit 1
-	BLKID_ROOT=$(/sbin/blkid -o value -s UUID "/dev/mapper/${VG_NAME}-${LV_VOL}p3") || exit 1
+	BLKID_SWAP=$(/sbin/blkid -o value -s UUID "/dev/mapper/${VG_NAME}-${LV_VOL}p2") || PRINT_USAGE
+	BLKID_ROOT=$(/sbin/blkid -o value -s UUID "/dev/mapper/${VG_NAME}-${LV_VOL}p3") || PRINT_USAGE
 
 	OLDSWAPID=$(grep -v ^# "${FSTAB}" | awk '$3=="swap" {print $1}')
 	OLDROOTID=$(grep -v ^# "${FSTAB}" | awk '$2=="/" {print $1}')
@@ -143,8 +147,8 @@ mk_ubuntu1404() {
 	sed -i 's/'${OLDSWAPID}'/UUID='${BLKID_SWAP}'/' "${FSTAB}"
 
 	# 後始末
-	cd || exit 1
-	umount -l "${MOUNTPOINT}" || exit 1
+	cd || PRINT_USAGE
+	umount -l "${MOUNTPOINT}" || PRINT_USAGE
 
 	${KPARTX} -d "${SOURCE_DEV}"
 	rmdir "${MOUNTPOINT}"
@@ -158,7 +162,7 @@ mk_ubuntu1604() {
 		curl 192.168.25.3/images/Ubuntu1604_master.img.gz -o $IMAGE.gz
 		gunzip $IMAGE.gz 
 	fi
-	ddrescue "$IMAGE" "${SOURCE_DEV}" -q --force || exit 1
+	ddrescue "$IMAGE" "${SOURCE_DEV}" -q --force || PRINT_USAGE
 	sync
 
 	## fix disk partition
@@ -184,11 +188,11 @@ mk_ubuntu1604() {
 
 
 	## 設定ファイル修正
-	MOUNTPOINT=$(mktemp -d) || exit 1
+	MOUNTPOINT=$(mktemp -d) || PRINT_USAGE
 	${KPARTX} -a "${SOURCE_DEV}"
 	sync
 	sleep 2
-	mount "/dev/mapper/loop0p3" "${MOUNTPOINT}" || exit 1
+	mount "/dev/mapper/loop0p3" "${MOUNTPOINT}" || PRINT_USAGE
 	tune2fs -c -1 -i 0 "/dev/mapper/loop0p3"
 	resize2fs "/dev/mapper/loop0p3"
 
@@ -240,8 +244,8 @@ mk_ubuntu1604() {
 
 	# mkfs
 	FSTAB="${MOUNTPOINT}/etc/fstab"
-	BLKID_SWAP=$(/sbin/blkid -o value -s UUID "/dev/mapper/loop0p2") || exit 1
-	BLKID_ROOT=$(/sbin/blkid -o value -s UUID "/dev/mapper/loop0p3") || exit 1
+	BLKID_SWAP=$(/sbin/blkid -o value -s UUID "/dev/mapper/loop0p2") || PRINT_USAGE
+	BLKID_ROOT=$(/sbin/blkid -o value -s UUID "/dev/mapper/loop0p3") || PRINT_USAGE
 
 	OLDSWAPID=$(grep -v ^# "${FSTAB}" | awk '$3=="swap" {print $1}')
 	OLDROOTID=$(grep -v ^# "${FSTAB}" | awk '$2=="/" {print $1}')
@@ -250,8 +254,8 @@ mk_ubuntu1604() {
 	sed -i 's/'${OLDSWAPID}'/UUID='${BLKID_SWAP}'/' "${FSTAB}"
 
 	# 後始末
-	cd || exit 1
-	umount -l "${MOUNTPOINT}" || exit 1
+	cd || PRINT_USAGE
+	umount -l "${MOUNTPOINT}" || PRINT_USAGE
 
 	${KPARTX} -d "${SOURCE_DEV}"
 	rmdir "${MOUNTPOINT}"
@@ -293,49 +297,49 @@ IFCONFIG="/sbin/ifconfig"
 if [ "$FLG_H" = "TRUE" ]; then
 	echo "VM_ID : ${VM_ID} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 ## VMが指定されて無い場合は処理を停止する。
 if [ "$FLG_N" = "TRUE" ]; then
 	echo "VM_NAME : ${VM_NAME} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 
 ## CPU COREが指定されて無い場合は処理を停止する。
 
 if [ "$FLG_C" = "TRUE" ]; then
 	echo "VM_CORE : ${VM_CORE} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 ## MEMORY SIZEが指定されて無い場合は処理を停止する。
 if [ "$FLG_M" = "TRUE" ]; then
 	echo "VM_MEMSIZE_MB : ${VM_MEMSIZE_MB} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 ## DISK SIZEが指定されて無い場合は処理を停止する。
 if [ "$FLG_D" = "TRUE" ]; then
 	echo "VM_DISKSIZE_GB : ${VM_DISKSIZE_GB} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 ## OSが指定されて無い場合は処理を停止する。
 if [ "$FLG_O" = "TRUE" ]; then
 	echo "VM_OS_OPTION : ${VM_OS_OPTION} 指定されました。 " 
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 ## パスワードが指定されて無い場合は処理を停止する。
 if [ "$FLG_P" = "TRUE" ]; then
 	echo "VM_PASS : ${VM_PASS}"
 else
-	exit 1
+	PRINT_USAGE
 fi
 
 
@@ -355,7 +359,7 @@ case $VM_OS_OPTION in
     ;;
   *)
     echo "指定のディストリビューションは存在しません。"
-    exit 1
+    PRINT_USAGE
     ;;
 esac
  
@@ -395,7 +399,7 @@ sed -e "s@__VM_NAME__@${VM_NAME}@" \
     ${TMPXML} > /etc/libvirt/qemu/"${VM_NAME}".xml
 
 
-${VIRSH} define "/etc/libvirt/qemu/${VM_NAME}.xml" || exit 1
+${VIRSH} define "/etc/libvirt/qemu/${VM_NAME}.xml" || PRINT_USAGE
 
 
 ## finish create

@@ -58,6 +58,25 @@ do
 done
 
 
+## CON_IDが指定されて無い場合は処理を停止する。
+if [ "$FLG_H" = "TRUE" ]; then
+	echo "CON_ID : ${CON_ID} 指定されました。 " 
+else
+	PRINT_USAGE
+fi
+## CONが指定されて無い場合は処理を停止する。
+if [ "$FLG_N" = "TRUE" ]; then
+	echo "CON_NAME : ${CON_NAME} 指定されました。 " 
+else
+	PRINT_USAGE
+fi
+
+## OPEが指定されて無い場合は処理を停止する。
+if [ "$FLG_O" = "TRUE" ]; then
+	echo "OPE : ${OPE} 指定されました。 " 
+else
+	PRINT_USAGE
+fi
 
 set +x
 echo -------------------------------------

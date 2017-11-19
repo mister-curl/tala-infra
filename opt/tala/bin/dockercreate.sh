@@ -74,9 +74,9 @@ SSH_STATUS=$(su - admin -c  "ssh -oStrictHostKeyChecking=no admin@$BM_IP 'test -
     if [ "$SSH_STATUS" = "true" ] ;then
         break
     elif [ "$SSH_TIME" -gt "${SSH_TIME_OUT}" ] ;then
-        exit 1
+	EXIT
     fi
-    SSH_TIME=$(( SSH_TIME + 1 ))
+    SSH_TIME=$(( SSH_TIME + 10 ))
     sleep 10
 done
 
@@ -97,10 +97,10 @@ STATUS=$(su - admin -c  "ssh admin@$BM_IP 'test -f /home/admin/lock && echo true
     if [ "$STATUS" = "true" ] ;then
         break
     elif [ "$TIME" -gt "${TIME_OUT}" ] ;then
-        exit 1
+	EXIT
     fi
 
-    TIME=$(( TIME + 1 ))
+    TIME=$(( TIME + 10 ))
     sleep 10
 done
 

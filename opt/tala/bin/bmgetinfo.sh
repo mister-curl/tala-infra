@@ -74,7 +74,7 @@ while true ;do
         exit 1
     fi    
 
-    TIME=$(( TIME + 1 ))
+    TIME=$(( TIME + 10 ))
     sleep 10
 done
 

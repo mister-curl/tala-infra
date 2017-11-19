@@ -25,6 +25,7 @@ fi
 
 EXIT () {
     ${CURL} -H "Content-type: application/json" -d '{ "status": "インストール失敗" }' -X POST ${URL_BASE}/containers/${HOST_ID}/status/ 
+    exit 1
 }
 
 ## print usage
