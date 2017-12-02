@@ -51,6 +51,9 @@ readonly IPMI_IP="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_ip_addre
 readonly IPMI_NAME="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_user_name)"
 readonly IPMI_PASS="$(${CURL} ${URL_BASE}/nodes/${HOST_ID}/ | ${JQ} .ipmi_password)"
 
+# APIのStatus を構築中に変更
+${CURL} -H "Content-type: application/json" -d '{ "status": "情報取得中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+
 # すでに情報がある場合には削除する
 [ -d "${TALADIR}/nodes/${HOST_ID}" ] && rm -rf ${TALADIR}/nodes/${HOST_ID} 
 [ -d "${TALADIR}/nodes/${IPMI_IP}" ] && rm -rf ${TALADIR}/nodes/${IPMI_IP} 
@@ -78,4 +81,5 @@ while true ;do
     sleep 10
 done
 
+${CURL} -H "Content-type: application/json" -d '{ "status": OSインストール待ち" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
 exit 0 
