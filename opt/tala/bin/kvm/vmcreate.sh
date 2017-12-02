@@ -56,6 +56,8 @@ IMG_DIR="${TALADIR}/web/images"
 
 logme
 
+echo $CMDNAME
+echo $CMDOPT
 
 
 mk_ubuntu1404() {
@@ -122,8 +124,9 @@ mk_ubuntu1404() {
 	# adminユーザ作成
         echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs 
         chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
-	mkdir /home/admin/.ssh
-	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/admin/.ssh/authorized_keys
+	mkdir ${MOUNTPOINT}/home/admin/.ssh
+	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
+	chroot "${MOUNTPOINT}" usermod -p "${VM_PASS}" admin
 
 	# 初回起動時にsshの鍵を作成しなおす
 	sed -i -e "/exit 0/d" "${MOUNTPOINT}/etc/rc.local"
@@ -227,8 +230,9 @@ mk_ubuntu1604() {
 	# adminユーザ作成
         echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs 
         chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
-	mkdir /home/admin/.ssh
-	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/admin/.ssh/authorized_keys
+	mkdir ${MOUNTPOINT}/home/admin/.ssh
+	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
+	chroot "${MOUNTPOINT}" usermod -p "${VM_PASS}" admin
 
 
 
