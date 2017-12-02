@@ -37,7 +37,7 @@ PRINT_USAGE () {
 TALADIR="/opt/tala"
 LOGDIR="${TALADIR}/log/"
 
-#logme
+logme
 
 
 ## オプション値の確認
@@ -78,14 +78,23 @@ readonly VM_DISKSIZE_GB="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .allocate_d
 readonly VM_OS_OPTION="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .os)"
 readonly USER_PASS="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .password)"
 
-VM_PASS=$(sh -c "python -c 'import crypt; print crypt.crypt(\"$USER_PASS\", \"a2\")'")
-su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/vmcreate.sh -H $VM_ID -n $VM_NAME -c $VM_CORE -m $VM_MEMSIZE_MB -d $VM_DISKSIZE_GB -o $VM_OS_OPTION -p $USER_PASS \" "
+#VM_PASS=$(sh -c "python -c 'import crypt; print crypt.crypt(\"$USER_PASS\", \"a2\")'")
+su - admin -c  "ssh -oStrictHostKeyChecking=no admin@$HOST_IP \"sudo bash $TALADIR/bin/vmcreate.sh -H $VM_ID -n $VM_NAME -c $VM_CORE -m $VM_MEMSIZE_MB -d $VM_DISKSIZE_GB -o $VM_OS_OPTION -p $USER_PASS \" "
 
 
-sleep 1
+sleep 10
 readonly VM_MAC="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .mac_address)"
 VM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $VM_MAC |awk '/lease/{print $2}')
 
 ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${VM_IP}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/ip_address/
+
+${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
+
+
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${VM_ID} -n $VM_NAME -i $VM_IP -m ${VM_MAC}
+
+
+
 exit 0
 

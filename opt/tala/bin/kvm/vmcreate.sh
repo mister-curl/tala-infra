@@ -56,6 +56,8 @@ IMG_DIR="${TALADIR}/web/images"
 
 logme
 
+echo $CMDNAME
+echo $CMDOPT
 
 
 mk_ubuntu1404() {
@@ -122,8 +124,9 @@ mk_ubuntu1404() {
 	# adminユーザ作成
         echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs 
         chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
-	mkdir /home/admin/.ssh
-	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/admin/.ssh/authorized_keys
+	mkdir ${MOUNTPOINT}/home/admin/.ssh
+	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
+	chroot "${MOUNTPOINT}" usermod -p "${VM_PASS}" admin
 
 	# 初回起動時にsshの鍵を作成しなおす
 	sed -i -e "/exit 0/d" "${MOUNTPOINT}/etc/rc.local"
@@ -227,8 +230,9 @@ mk_ubuntu1604() {
 	# adminユーザ作成
         echo "CREATE_HOME yes" >> ${MOUNTPOINT}/etc/login.defs 
         chroot "${MOUNTPOINT}" useradd "admin" -s /bin/bash -g 0 
-	mkdir /home/admin/.ssh
-	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/admin/.ssh/authorized_keys
+	mkdir ${MOUNTPOINT}/home/admin/.ssh
+	cp /home/admin/.ssh/authorized_keys ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
+	chroot "${MOUNTPOINT}" usermod -p "${VM_PASS}" admin
 
 
 
@@ -252,6 +256,21 @@ mk_ubuntu1604() {
 
 	sed -i 's/'${OLDROOTID}'/UUID='${BLKID_ROOT}'/' "${FSTAB}"
 	sed -i 's/'${OLDSWAPID}'/UUID='${BLKID_SWAP}'/' "${FSTAB}"
+
+
+        cd ${MOUNTPOINT}
+        wget http://repo.zabbix.com/zabbix/3.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.0-1+trusty_all.deb
+        rm -f ${MOUNTPOINT}/etc/resolv.conf
+        echo 'nameserver 8.8.4.4' > ${MOUNTPOINT}/etc/resolv.conf
+        chroot ${MOUNTPOINT} dpkg -i /zabbix-release_3.0-1+trusty_all.deb
+        chroot ${MOUNTPOINT} apt-get update
+
+        chroot ${MOUNTPOINT} apt install zabbix-agent -y
+        sed -i "s/127.0.0.1/192.168.25.3/g" ${MOUNTPOINT}/etc/zabbix/zabbix_agentd.conf
+        chroot ${MOUNTPOINT} systemctl enable zabbix-agent
+        sed -i 2i"-A INPUT -p tcp -m state --state NEW -m tcp --dport 10050 -j ACCEPT" ${MOUNTPOINT} /etc/iptables/iptables.rules
+
+        umount ${MOUNTPOINT}	
 
 	# 後始末
 	cd || PRINT_USAGE
@@ -305,6 +324,7 @@ if [ "$FLG_N" = "TRUE" ]; then
 	echo "VM_NAME : ${VM_NAME} 指定されました。 " 
 else
 	PRINT_USAGE
+fi
 
 ## CPU COREが指定されて無い場合は処理を停止する。
 
@@ -411,7 +431,8 @@ echo "vm create and start successfully"
 
 sleep 20
 
-IPTABLE="/sbin/iptables"
+
+IPTABLES="/sbin/iptables"
 IPTABLES_SAVE="/sbin/iptables-save"
 $IPTABLES -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport ${VM_VNC} -j ACCEPT
 $IPTABLES_SAVE > /etc/iptables/iptables.rules
@@ -420,7 +441,6 @@ readonly JQ="/usr/bin/jq -r"
 readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 ${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${VMMAC0}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/mac_address/
-${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
 
 exit 0
 

@@ -106,4 +106,5 @@ done
 
 
 ${CURL} -H "Content-type: application/json" -d '{ "status": "Docker構築完了" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "type": "Docker" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/type/ 
 echo "script end"

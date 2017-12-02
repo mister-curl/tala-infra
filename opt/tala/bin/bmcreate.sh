@@ -10,6 +10,9 @@ CMDOPT=$*
 FLG_H=
 FLG_d=
 FLG_U=
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 logme
 
@@ -70,12 +73,10 @@ fi
 
 
 
-readonly CURL="/usr/bin/curl -s"
-readonly JQ="/usr/bin/jq -r"
-readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 # APIのStatus を構築中に変更
-${CURL} -H "Content-type: application/json" -d '{ "status": "構築中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "status": "BM構築中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "type": "" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/type/ 
 
 
 
@@ -151,20 +152,25 @@ BM_IP=
 for mac in ${BM_MAC_LIST[*]} ;do
 	# BMで利用するIPの返却
 	if [ "$BM_IP" = "" ] ;then 
-		BM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -B1 $mac |awk '/lease/{print $2}')
+		BM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -B1 $mac |awk '/lease/{print $2}'|tail -1)
 ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${BM_IP}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/ip_address/
 ${CURL} -H "Content-type: application/json" -d "{ \"mac_address\": \""${mac}"\" }" -X POST ${URL_BASE}/nodes/${HOST_ID}/mac_address/
 	else
 		break
 	fi
 done
-${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "status": "BM構築完了" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
 
 for mactpl in ${BM_MAC_LIST[*]} ;do
 	# BM対象の一時利用スクリプトの削除
 	mac=$(echo "01-${mactpl}" | tr ":" "-")
-	rm -f  ${SCRIPT}
+	 rm -f  ${SCRIPT}
 	rm -f  /tftpboot/pxelinux.cfg/${mac}
 done
 
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${HOST_ID} -n $BM_NAME -i $BM_IP -m ${BM_MAC_LIST[0]}
+
+
+${CURL} -H "Content-type: application/json" -d '{ "type": "BeraMetal" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/type/ 
 echo "script end"

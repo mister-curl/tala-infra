@@ -75,13 +75,18 @@ readonly CON_NAME="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .hostname
 readonly CON_OS_OPTION="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .os)"
 readonly USER_PASS="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .password)"
 
-su - admin -c  "ssh admin@$HOST_IP \"sudo bash $TALADIR/bin/concreate.sh -H $CON_ID -n $CON_NAME  -o $CON_OS_OPTION -p $USER_PASS \" "
+su - admin -c  "ssh  -oStrictHostKeyChecking=no admin@$HOST_IP \"sudo bash $TALADIR/bin/concreate.sh -H $CON_ID -n $CON_NAME  -o $CON_OS_OPTION -p $USER_PASS \" "
 
 
 sleep 1
 readonly CON_MAC="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .mac_address)"
-CON_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $CON_MAC |awk '/lease/{print $2}')
+CON_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $CON_MAC |awk '/lease/{print $2}'| tail -1)
 
 ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${CON_IP}"\" }" -X POST ${URL_BASE}/containers/${CON_ID}/ip_address/
-exit 0
 
+
+
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${CON_ID} -n $CON_NAME -i $CON_IP -m ${CON_MAC}
+
+exit 0

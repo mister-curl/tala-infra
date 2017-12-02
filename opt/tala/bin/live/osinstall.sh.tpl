@@ -116,6 +116,8 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 	    mkdir -p ${MOUNTPOINT}/root/.ssh/
 	    mkdir -p ${MOUNTPOINT}/home/admin/.ssh/
 	    chroot "${MOUNTPOINT}" chown admin.  /home/admin/.ssh/
+	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} root
+	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} admin
 
 	    scp ${TALA_SERVER}:/home/admin/.ssh/id_rsa.pub ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
 
@@ -176,6 +178,8 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	mkdir -p ${MOUNTPOINT}${LOGDIR}
 	mkdir -p ${MOUNTPOINT}${BINDIR}
 	chroot "${MOUNTPOINT}" chown -R admin. ${TALADIR}
+	chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} root
+	chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} admin
 
 	cat <<- EOL > "${MOUNTPOINT}/opt/tala/bin/vncinit.sh" 
 	#!/bin/sh
@@ -195,6 +199,7 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	EOF
 	
 	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport ${VNC_PORT} -j ACCEPT
+	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport 10050 -j ACCEPT
 	iptables-save > /etc/iptables/iptables.rules
 	
 	echo "vnc4server -SecurityTypes None" >> /etc/rc.local
@@ -205,6 +210,17 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	sed -i "/exit 0/d" ${MOUNTPOINT}/etc/rc.local
 	echo "bash /opt/tala/bin/vncinit.sh" >> ${MOUNTPOINT}/etc/rc.local
 
+
+	cd ${MOUNTPOINT}
+	wget http://repo.zabbix.com/zabbix/3.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.0-1+trusty_all.deb
+	rm -f ${MOUNTPOINT}/etc/resolv.conf
+        echo 'nameserver 8.8.4.4' > ${MOUNTPOINT}/etc/resolv.conf
+	chroot ${MOUNTPOINT} dpkg -i /zabbix-release_3.0-1+trusty_all.deb
+	chroot ${MOUNTPOINT} apt-get update
+
+	chroot ${MOUNTPOINT} apt install zabbix-agent -y 
+	sed -i "s/127.0.0.1/192.168.25.3/g" ${MOUNTPOINT}/etc/zabbix/zabbix_agentd.conf
+	chroot ${MOUNTPOINT} systemctl enable zabbix-agent
 
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda

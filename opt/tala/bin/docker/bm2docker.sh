@@ -23,6 +23,7 @@ DOCKER="/usr/bin/docker"
 SYSTEM=$(dmidecode -t 1 | grep 'Product Name' | awk -F": " '{print $2}')
 
 $APTCMD update
+$APTCMD install vim bind-utils net-utils -y 
 
 # # os check 
 test $(id -u) -eq 0 || { echo "try sudo sh $0"; exit 1; }
@@ -112,7 +113,7 @@ $DOCKER build --no-cache -t tala/ubuntu:16.04 .
 mv -f /etc/network/interfaces{,.orig}
 
 while : ;do
-        LIST=($(ifconfig -a | grep Ethernet | awk '{print $1}' ))
+        LIST=($(ifconfig -a | grep Ethernet|grep -v docker0 | awk '{print $1}' ))
         if [ ${#LIST[*]} -ge 1 ] ; then
                 break
         fi
@@ -129,12 +130,15 @@ source /etc/network/interfaces.d/*
 auto lo
 iface lo inet loopback
 
+
 # The primary network interface
 auto br0
 iface br0 inet dhcp
 EOF
 
-echo "bridge_ports ${LIST[0]}" >> /etc/network/interfaces
+echo "bridge_ports ${LIST[1]}" >> /etc/network/interfaces
+echo "auto ${LIST[0]}" >>  /etc/network/interfaces
+echo "iface ${LIST[0]} inet dhcp " >>  /etc/network/interfaces
 
 
 # iptables
