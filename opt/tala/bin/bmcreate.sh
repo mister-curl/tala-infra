@@ -10,6 +10,9 @@ CMDOPT=$*
 FLG_H=
 FLG_d=
 FLG_U=
+readonly CURL="/usr/bin/curl -s"
+readonly JQ="/usr/bin/jq -r"
+readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 logme
 
@@ -70,12 +73,9 @@ fi
 
 
 
-readonly CURL="/usr/bin/curl -s"
-readonly JQ="/usr/bin/jq -r"
-readonly URL_BASE="http://59.106.215.39:8000/tala/api/v1"
 
 # APIのStatus を構築中に変更
-${CURL} -H "Content-type: application/json" -d '{ "status": "構築中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "status": "BM構築中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
 
 
 
@@ -163,8 +163,12 @@ ${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X
 for mactpl in ${BM_MAC_LIST[*]} ;do
 	# BM対象の一時利用スクリプトの削除
 	mac=$(echo "01-${mactpl}" | tr ":" "-")
-	rm -f  ${SCRIPT}
+	 rm -f  ${SCRIPT}
 	rm -f  /tftpboot/pxelinux.cfg/${mac}
 done
+
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${HOST_ID} -n $BM_NAME -i $BM_IP -m ${BM_MAC_LIST[0]}
+
 
 echo "script end"
