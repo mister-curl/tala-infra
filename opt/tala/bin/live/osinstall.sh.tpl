@@ -202,7 +202,7 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport 10050 -j ACCEPT
 	iptables-save > /etc/iptables/iptables.rules
 	
-	echo "vnc4server -SecurityTypes None" >> /etc/rc.local
+	echo "sudo vnc4server -SecurityTypes None" >> /etc/rc.local
 	sed -i "/vncinit.sh/d" /etc/rc.local
 	
 	EOL
