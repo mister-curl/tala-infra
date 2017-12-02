@@ -116,6 +116,8 @@ elif [ "$OS_IMG" = "Ubuntu1404_master.img.gz" ] ;then
 	    mkdir -p ${MOUNTPOINT}/root/.ssh/
 	    mkdir -p ${MOUNTPOINT}/home/admin/.ssh/
 	    chroot "${MOUNTPOINT}" chown admin.  /home/admin/.ssh/
+	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} root
+	    chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} admin
 
 	    scp ${TALA_SERVER}:/home/admin/.ssh/id_rsa.pub ${MOUNTPOINT}/home/admin/.ssh/authorized_keys
 
@@ -176,6 +178,8 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	mkdir -p ${MOUNTPOINT}${LOGDIR}
 	mkdir -p ${MOUNTPOINT}${BINDIR}
 	chroot "${MOUNTPOINT}" chown -R admin. ${TALADIR}
+	chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} root
+	chroot "${MOUNTPOINT}" usermod -p ${USER_PASS} admin
 
 	cat <<- EOL > "${MOUNTPOINT}/opt/tala/bin/vncinit.sh" 
 	#!/bin/sh
