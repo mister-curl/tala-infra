@@ -253,6 +253,21 @@ mk_ubuntu1604() {
 	sed -i 's/'${OLDROOTID}'/UUID='${BLKID_ROOT}'/' "${FSTAB}"
 	sed -i 's/'${OLDSWAPID}'/UUID='${BLKID_SWAP}'/' "${FSTAB}"
 
+
+        cd ${MOUNTPOINT}
+        wget http://repo.zabbix.com/zabbix/3.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.0-1+trusty_all.deb
+        rm -f ${MOUNTPOINT}/etc/resolv.conf
+        echo 'nameserver 8.8.4.4' > ${MOUNTPOINT}/etc/resolv.conf
+        chroot ${MOUNTPOINT} dpkg -i /zabbix-release_3.0-1+trusty_all.deb
+        chroot ${MOUNTPOINT} apt-get update
+
+        chroot ${MOUNTPOINT} apt install zabbix-agent -y
+        sed -i "s/127.0.0.1/192.168.25.3/g" ${MOUNTPOINT}/etc/zabbix/zabbix_agentd.conf
+        chroot ${MOUNTPOINT} systemctl enable zabbix-agent
+        sed -i 2i"-A INPUT -p tcp -m state --state NEW -m tcp --dport 10050 -j ACCEPT" ${MOUNTPOINT} /etc/iptables/iptables.rules
+
+        umount ${MOUNTPOINT}	
+
 	# 後始末
 	cd || PRINT_USAGE
 	umount -l "${MOUNTPOINT}" || PRINT_USAGE
@@ -305,6 +320,7 @@ if [ "$FLG_N" = "TRUE" ]; then
 	echo "VM_NAME : ${VM_NAME} 指定されました。 " 
 else
 	PRINT_USAGE
+fi
 
 ## CPU COREが指定されて無い場合は処理を停止する。
 
