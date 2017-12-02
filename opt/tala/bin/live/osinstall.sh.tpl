@@ -199,6 +199,7 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	EOF
 	
 	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport ${VNC_PORT} -j ACCEPT
+	iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport 10050 -j ACCEPT
 	iptables-save > /etc/iptables/iptables.rules
 	
 	echo "vnc4server -SecurityTypes None" >> /etc/rc.local
@@ -220,7 +221,6 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	chroot ${MOUNTPOINT} apt install zabbix-agent -y 
 	sed -i "s/127.0.0.1/192.168.25.3/g" ${MOUNTPOINT}/etc/zabbix/zabbix_agentd.conf
 	chroot ${MOUNTPOINT} systemctl enable zabbix-agent
-	sed -i 7i"-A INPUT -p tcp -m state --state NEW -m tcp --dport 10050 -j ACCEPT" /etc/iptables/iptables.rules
 
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda
