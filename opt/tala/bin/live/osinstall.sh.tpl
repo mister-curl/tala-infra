@@ -205,16 +205,18 @@ elif [ "$OS_IMG" = "Ubuntu1604_master.img.gz" ] ;then
 	sed -i "/exit 0/d" ${MOUNTPOINT}/etc/rc.local
 	echo "bash /opt/tala/bin/vncinit.sh" >> ${MOUNTPOINT}/etc/rc.local
 
-        php_value date.timezone Asia/Tokyo
 
 	cd ${MOUNTPOINT}
 	wget http://repo.zabbix.com/zabbix/3.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.0-1+trusty_all.deb
-	chroot ${MOUNTPOINT} dpkg -i zabbix-release_3.0-1+trusty_all.deb
-	${MOUNTPOINT} apt-get update
+	rm -f ${MOUNTPOINT}/etc/resolv.conf
+        echo 'nameserver 8.8.4.4' > ${MOUNTPOINT}/etc/resolv.conf
+	chroot ${MOUNTPOINT} dpkg -i /zabbix-release_3.0-1+trusty_all.deb
+	chroot ${MOUNTPOINT} apt-get update
 
-	${MOUNTPOINT} apt install zabbix-agent -y 
+	chroot ${MOUNTPOINT} apt install zabbix-agent -y 
 	sed -i "s/127.0.0.1/192.168.25.3/g" ${MOUNTPOINT}/etc/zabbix/zabbix_agentd.conf
-	${MOUNTPOINT} systemctl enable zabbix-agent
+	chroot ${MOUNTPOINT} systemctl enable zabbix-agent
+	sed -i 7i"-A INPUT -p tcp -m state --state NEW -m tcp --dport 10050 -j ACCEPT" /etc/iptables/iptables.rules
 
 	umount ${MOUNTPOINT}
 	kpartx -d /dev/sda

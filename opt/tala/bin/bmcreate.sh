@@ -76,6 +76,7 @@ fi
 
 # APIのStatus を構築中に変更
 ${CURL} -H "Content-type: application/json" -d '{ "status": "BM構築中" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "type": "" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/type/ 
 
 
 
@@ -171,4 +172,5 @@ done
 bash /opt/tala/bin/zabbixapi.sh -H ${HOST_ID} -n $BM_NAME -i $BM_IP -m ${BM_MAC_LIST[0]}
 
 
+${CURL} -H "Content-type: application/json" -d '{ "type": "BeraMetal" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/type/ 
 echo "script end"
