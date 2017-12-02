@@ -83,5 +83,10 @@ readonly CON_MAC="$(${CURL} ${URL_BASE}/containers/${CON_ID}/ | ${JQ} .mac_addre
 CON_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $CON_MAC |awk '/lease/{print $2}'| tail -1)
 
 ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${CON_IP}"\" }" -X POST ${URL_BASE}/containers/${CON_ID}/ip_address/
-exit 0
 
+
+
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${CON_ID} -n $CON_NAME -i $CON_IP -m ${CON_MAC}
+
+exit 0
