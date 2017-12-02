@@ -87,5 +87,14 @@ readonly VM_MAC="$(${CURL} ${URL_BASE}/vms/${VM_ID}/ | ${JQ} .mac_address)"
 VM_IP=$(grep -E "ethernet|lease" /var/lib/dhcp/dhcpd.leases | grep -i -B1 $VM_MAC |awk '/lease/{print $2}')
 
 ${CURL} -H "Content-type: application/json" -d "{ \"ip_address\": \""${VM_IP}"\" }" -X POST ${URL_BASE}/vms/${VM_ID}/ip_address/
+
+${CURL} -H "Content-type: application/json" -d '{ "status": "構築完了" }' -X POST ${URL_BASE}/vms/${VM_ID}/status/
+
+
+# zabix
+bash /opt/tala/bin/zabbixapi.sh -H ${VM_ID} -n $VM_NAME -i $VM_IP -m ${VM_MAC}
+
+
+
 exit 0
 
