@@ -81,5 +81,5 @@ while true ;do
     sleep 10
 done
 
-${CURL} -H "Content-type: application/json" -d '{ "status": OSインストール待ち" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
+${CURL} -H "Content-type: application/json" -d '{ "status": "OSインストール待ち" }' -X POST ${URL_BASE}/nodes/${HOST_ID}/status/ 
 exit 0 
