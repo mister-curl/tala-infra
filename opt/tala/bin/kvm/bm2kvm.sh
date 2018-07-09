@@ -50,11 +50,6 @@ $APTCMD -y install qemu-kvm libvirt-bin
 $APTCMD -y install gdisk patch libreadline5 lvm2 xfsprogs
 
 
-# irqblance bug fix
-sed -i '\%exec% s/$/ \$OPTIONS/' /etc/init/irqbalance.conf
-echo 'OPTIONS="--hintpolicy=ignore"' >> /etc/default/irqbalance
-
-
 # libvirt qemu-kvm
 virsh net-destroy default
 virsh net-autostart --disable default
@@ -81,12 +76,6 @@ Flags: seen
 EOF
 
 $APTCMD -y install libguestfs-tools iotop virt-top
-
-cat << 'EOF' >> /etc/profile.d/iotop2.sh
-alias iotop2='sudo iotop -o -P -u qemu -d 3'
-EOF
-
-sed -i '\%^kvm% s/$/xymon,iadmin/' /etc/group
 
 # Development Tools
 $APTCMD -y install vlan ifenslave ethtool sysstat conntrack ebtables vim moreutils
